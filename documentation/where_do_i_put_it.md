@@ -2,7 +2,15 @@
 
 [Return to Readme](../readme.md)
 
+
+## Some other notes
+
+While I'm halfhazardly just throwing some things together, let's make a list of what I've done so far.
+
+1. **[.garbarge.py](../.garbarge.py)** is loose script for gathering some titbits of information and saving them. Like updating the requirments.txt, this isn't a final measure, just a quick fix that needs fine tuning. It will likely build some of the path information for cfg
+
 - [Make it easy](#make-it-easy)
+  - [Some other notes](#some-other-notes)
   - [All documentation](#all-documentation)
     - [Precursory](#precursory)
     - [Participatory](#participatory)
@@ -23,6 +31,13 @@
     - [Beautiful](#beautiful)
   - [Body](#body)
     - [Comprehensive](#comprehensive)
+
+
+
+
+
+
+
 
 Getting started should be as easy and straight-forward as possible. Most people don’t like change, and introducing new tooling and things will already rouse a negative response in some. This is why you need to make it as simple as possible to get started.
 
