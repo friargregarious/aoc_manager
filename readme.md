@@ -5,6 +5,9 @@ version 0.0.1
 [License information found at bottom of this docutment](#license-information)
 
 
+***THIS IS NOT A WORKING PROJECT YET!!! STILL IN IT'S INFANCY!!!***
+
+
 - [AoC Manager](#aoc-manager)
   - [User Portion](#user-portion)
     - [Why AoC Manager?](#why-aoc-manager)
