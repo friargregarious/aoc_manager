@@ -1,12 +1,13 @@
 """usage:
 
 import day_builder
-daybuilder.main(year, day) -> json
+daybuilder.main(year, day) -> files
 
 {
     "instructions.md": contents,
     "solve2023_10_a.py": contents,
     "solve2023_10_b.py": contents,
+    "example.txt: contents,
     "input.txt": contents,
     "local_utils.py": contents,
     "setup.py": contents,
@@ -16,19 +17,22 @@ daybuilder.main(year, day) -> json
 """
 import os
 import sys
-import build_utils
 from datetime import datetime
 
 import platform
 from urllib.parse import quote
 import requests
 import browser_cookie3
+import build_utils
+from build_utils import path
+
 
 ###############################################################################
 os.system("cls")
 
 
-env_cfg = build_utils.get_cfg("env")  # cParser()
+# env_cfg = build_utils.get_cfg("env")  # cParser()
+env_cfg = build_utils.get_cfg("local")  # cParser()
 user_cfg = build_utils.get_cfg("users")  # cParser()
 
 env_cfg["paths"]["games_path"] = "C:/Advent of Code"
@@ -56,18 +60,14 @@ if "-d" in arg_dict:
 else:
     day = datetime.now().day
 ###############################################################################
-print(f"|<{' ' * (80-4)}>|")
-
-
-def pad(day: int) -> str:
-    return str(day).rjust(2, "0")
+# print(f"|<{' ' * (80-4)}>|")
 
 
 def parse_info(user, puzzle):
     """ """
     homename, username, userid = user.id.split(".")
     userhome = f"github.com/{username}"
-    usersource_url = f"~/Advent-of-Code/AOC {puzzle.year}/Day {pad(puzzle.day)}"
+    usersource_url = f"~/Advent-of-Code/AOC {puzzle.year}/Day {puzzle.day:02}"
 
     return {
         ":userhome:": userhome,
@@ -91,33 +91,37 @@ try:
     token = get_token()
 
 except PermissionError:
-    u_home, u_id, token = user_cfg.getlist("current_users", "friargregarious")
+    u_emali, u_home, u_id, token = user_cfg.getlist("current_users", "friargregarious")
     u_id = int(u_id)
 
-aoc_user, aoc_puzzle = build_utils.get_puzzle_data(year, day, token)
+# aoc_user, aoc_puzzle = build_utils.get_puzzle_data(year, day, token)
+# now this is a dict of final answers
 
-homename, username, userid = aoc_user.id.split(".")
+file_data, rep_data = build_utils.get_puzzle_data(year, day, token)
+# return_file_data, return_rep_data
 
-# user_cfg.putlist("current_users", username, [homename, userid, token])
-# user_cfg.save_me("users")
-
-
-input_url = f"https://adventofcode.com/{year}/day/{day}/input"
+# input_url = rep_data[]
 bannerline = "#" * 79
-useremail = "greg.denyes@gmail.com"
-game_root = "C:/Advent of Code"
+# useremail = "greg.denyes@gmail.com"
+game_root = env_cfg["paths"]["games_path"]
 
 
-replacements = {
-    ":title:": aoc_puzzle.title.title(),
-    ":year:": str(year),
-    ":day:": str(day),
-    ":useremail:": useremail,
-    ":pyversion:": platform.python_version(),
-}
-
-replacements.update(parse_info(aoc_user, aoc_puzzle))
-
+# return_data = {
+#     "file_data": {
+#         "instructions": a2m.get_markdown(year, day),
+#         "examples": puzzle.examples[0],
+#         # "my_stats": _stats,
+#         "input_data": puzzle.input_data
+#         },
+#     "rep_data": {
+#         ":input_url:": puzzle.input_data_url,
+#         ":games_root:": games_root,
+#         ":title:": puzzle.title.title(),
+#         ":year:": str(year),
+#         ":day:": str(day),
+#         ":pyversion:": platform.python_version(),
+#         }
+# }
 
 def banner(title):
     new_banner = [
@@ -126,9 +130,6 @@ def banner(title):
         bannerline,
     ]
     return "\n" + "\n".join(new_banner) + "\n"
-
-
-# default_imports =
 
 
 header_lines = [
@@ -150,17 +151,17 @@ for line in header_lines:
 
     elif isinstance(line, str):
         new_line = line
-        for lookfor, replacewith in replacements.items():
-            if lookfor in line:
-                new_line = new_line.replace(lookfor, replacewith)
-        new_line = f"#{new_line.center(77)}#"
+        # for lookfor, replacewith in replacements.items():
+            # if lookfor in line:
+        new_line = new_line.format(**rep_data)
+        new_line = f"#{new_line: ^78}#"
 
     else:  # left/right lists
         left, right = line
 
-        for lookfor, replacewith in replacements.items():
-            if lookfor in right:
-                right = right.replace(lookfor, str(replacewith))
+        # for lookfor, replacewith in replacements.items():
+            # if lookfor in right:
+        right = right.format(**rep_data)
 
         center_on = f"{left} ".ljust(24, "-") + f" {right}".rjust(50, "-")
         new_line = f"#{center_on.center(77)}#"
@@ -245,63 +246,88 @@ running_from_home = [
 # here is where the two "Solve" files become a little different
 outputs_b = outputs.copy()
 
-for line in parts:
-    outputs.append(line.replace(":part:", "a"))
-    outputs_b.append(line.replace(":part:", "b"))
+outputs.extend(parts)
+outputs.extend(main_entry)
+outputs.extend(running_from_home)
+rep_data[":part:"]="a"
+a_output_text = "\n".join(outputs).format(**rep_data)
 
-for line in main_entry:
-    outputs.append(line.replace(":part:", "a"))
-    outputs_b.append(line.replace(":part:", "b"))
-
-for line in running_from_home:
-    outputs.append(line.replace(":part:", "a"))
-    outputs_b.append(line.replace(":part:", "b"))
-
-
-new_day_path = f"{game_root}/AOC {year}/Day {pad(day)}"
-
-if not os.path.isdir(new_day_path):
-    os.mkdirs(new_day_path, exist_ok=True)
-
-a_txt = "\n".join(outputs)
-b_txt = "\n".join(outputs_b)
-
-a_file_name = f"{new_day_path}/Solve{year}_{pad(day)}_a.py"
-if not os.path.isfile(a_file_name):
-    open(a_file_name, "w", encoding="utf-8").write(a_txt)
-else:
-    raise FileExistsError(filename=a_file_name)
+outputs_b.extend(parts)
+outputs_b.extend(main_entry)
+outputs_b.extend(running_from_home)
+rep_data[":part:"]="b"
+b_output_text = "\n".join(outputs_b).format(**rep_data)
 
 
-b_file_name = f"{new_day_path}/Solve{year}_{pad(day)}_b.py"
-if not os.path.isfile(b_file_name):
-    open(b_file_name, "w", encoding="utf-8").write(b_txt)
-else:
-    raise FileExistsError(filename=b_file_name)
+# for line in parts:
+#     outputs.append(line.format(**rep_data))
+#     outputs_b.append(line.format(**rep_data))
+
+# for line in main_entry:
+#     outputs.append(line.format(**rep_data))
+#     outputs_b.append(line.format(**rep_data))
+
+# for line in running_from_home:
+#     outputs.append(line.format(**rep_data))
+#     outputs_b.append(line.format(**rep_data))
 
 
-open(f"{new_day_path}/Solve{year}_{pad(day)}_b.py", "w", encoding="utf-8").write(b_txt)
+###############################################################################
+# bring together all the files to write #######################################
+###############################################################################
 
+# build common utilities file over from here to "new day" #####################
+orig_util = open("my_utils.py", "r").read()
 
-# Setting the source and the destination folders
-src = os.getcwd().replace("\\", "/")
-dst = new_day_path
+# Setting the source folders ##################################################
+src = os.getcwd().replace("\\", "/")  # Here
 
-# copy the common utilities over from here to "new day"
-orig = open("my_utils.py", "r").read()
-orig = orig.replace(":config_path:", cfg_root)
-open(dst + "/" + "my_utils.py", "w").write(orig)
+# create dst ##################################################################
+dst = path(game_root, f"AOC {year}", f"Day {day:02}")  # There
+
+if not os.path.isdir(dst):
+    os.makedirs(dst)
+
+os.chdir(dst)
+
+# Setting up the file names and content for mass I/O ##########################
+files_to_write = []  # [path+filename, content]
+
+# common_ini = path(env_cfg.get("paths", "games_root"), ".ini")
+rep_data[":config_path:"] = path(env_cfg.get("paths", "games_root"), ".ini")
+# .replace(":config_path:", common_ini)
+orig_util = orig_util.format(**rep_data)
+
+files_to_write.append(["my_utils.py", orig_util])
+
+# solve file A
+files_to_write.append([f"Solve{year}_{day:02}_a.py",
+                       a_output_text
+                       ])
+# solve file b
+files_to_write.append([f"Solve{year}_{day:02}_b.py", b_output_text])
 
 # write the input.txt
-data_src = aoc_puzzle.input_data
-open(dst + "/" + "input.txt", "w").write(data_src)
+# data_src = aoc_puzzle.input_data
+files_to_write.extend(
+    [
+        ["input.txt", rep_data["input_data"]],
+        ["instructions.md", rep_data["instructions"]],
+        ["example.txt", str(rep_data["examples"])],
+    ]
+)
+
+for filename, content in files_to_write:
+    path = path(dst, content)
+    print(path)
+    open(path, "w", encoding="utf-8").write(content)
 
 
-path_2_black_from = "/".join(new_day_path.split("/")[:-1])
-path_2_black = "/" + new_day_path.split("/")[-1]
+path_2_black_from = "/".join(dst.split("/")[:-1])
+path_2_black = "/" + dst.split("/")[-1]
 
 os.chdir(path_2_black_from)
-black_cmd = "black " + f'"./Day {pad(day)}/"' + " -W 2 -q --fast"
+black_cmd = "black " + f'"./Day {day:02}/"' + " -W 2 -q --fast"
 
 os.system(black_cmd)
 print("All Done")

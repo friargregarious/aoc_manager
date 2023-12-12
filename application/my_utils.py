@@ -4,6 +4,7 @@ I like to use in this application
 import os
 from configparser import ConfigParser
 import aocd
+from app_utils import path
 
 __config_path__ = ":config_path:"
 __puzzle_year__, __puzzle_day__ = ":year:", ":day:"
@@ -15,7 +16,7 @@ def solve_file_names(part):
 class MyConfigParser(ConfigParser):
     """regular configparser doesn't make lists easy"""
 
-    cfg_path = ""
+    cfg_path: str = ""
 
     def getlist(self, section, option):
         """pulls a list from a config element"""
@@ -33,7 +34,11 @@ class MyConfigParser(ConfigParser):
 
     def save_me(self, cfg_name: str):
         """saves config file incase we changed anything"""
-        save_to = self.cfg_path + cfg_name + ".ini"
+
+        save_to = path(self.cfg_path, cfg_name)
+        if not save_to.endswith(".ini"):
+            save_to += ".ini"
+
         try:
             with open(save_to, "w", encoding="utf-8") as cfgsave:
                 self.write(cfgsave)
@@ -64,5 +69,4 @@ def version_increment(file: str, big: int = 0, med: int = 0, sml: int = 0):
 
 def solve_me(part:str, answer=None):
     if answer is not None:
-        
-    
+        pass
